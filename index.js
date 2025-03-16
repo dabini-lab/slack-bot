@@ -18,6 +18,9 @@ app.post("/slack/events", async (req, res) => {
   const { type, event } = req.body;
   console.log("Received event:", JSON.stringify(req.body, null, 2));
 
+  // Immediately acknowledge the webhook
+  res.sendStatus(200);
+
   if (type === "url_verification") {
     res.send(req.body.challenge);
   } else if (type === "event_callback" && event.type === "app_mention") {
@@ -42,19 +45,13 @@ app.post("/slack/events", async (req, res) => {
         channel: event.channel,
         text: reply,
       });
-
-      console.log("Message sent successfully:", result);
-      res.sendStatus(200);
     } catch (error) {
       console.error("Error details:", error.data || error);
       await client.chat.postMessage({
         channel: event.channel,
         text: "Engine API 호출 중 문제가 발생했어.",
       });
-      res.sendStatus(500);
     }
-  } else {
-    res.sendStatus(200);
   }
 });
 
