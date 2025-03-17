@@ -30,7 +30,7 @@ app.post("/slack/events", async (req, res) => {
 
       const requestBody = {
         messages: [prompt],
-        thread_id: event.channel,
+        thread_id: `slack-${event.channel}`,
       };
 
       const response = await authClient.request({
