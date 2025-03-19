@@ -25,12 +25,21 @@ app.post("/slack/events", async (req, res) => {
     res.send(req.body.challenge);
   } else if (type === "event_callback" && event.type === "app_mention") {
     try {
+      // Get user info to retrieve the display name
+      const userInfo = await client.users.info({
+        user: event.user,
+      });
+
+      const speaker_name =
+        userInfo.user.profile.display_name || userInfo.user.name;
+
       const authClient = await auth.getIdTokenClient(ENGINE_URL);
       const prompt = event.text.replace(/<@[A-Z0-9]+>/, "").trim();
 
       const requestBody = {
         messages: [prompt],
-        thread_id: `slack-${event.channel}`,
+        session_id: `slack-${event.channel}`,
+        speaker_name: speaker_name,
       };
 
       const response = await authClient.request({
