@@ -48,31 +48,12 @@ app.post("/slack/events", async (req, res) => {
         speaker_name: speaker_name,
       };
 
-      // Send initial typing indicator
-      await client.conversations.typing({
-        channel: event.channel,
-      });
-
-      // Set up interval to keep sending typing indicators
-      const typingInterval = setInterval(async () => {
-        try {
-          await client.conversations.typing({
-            channel: event.channel,
-          });
-        } catch (error) {
-          console.error("Error sending typing indicator:", error);
-        }
-      }, 3000); // Send typing indicator every 3 seconds
-
       try {
         const response = await authClient.request({
           url: `${ENGINE_URL}/messages`,
           method: "POST",
           data: requestBody,
         });
-
-        // Stop typing indicator
-        clearInterval(typingInterval);
 
         const replyMessages = response.data.messages;
         const limitedReplyMessages = replyMessages.slice(
@@ -88,9 +69,6 @@ app.post("/slack/events", async (req, res) => {
           }
         }
       } catch (error) {
-        // Stop typing indicator
-        clearInterval(typingInterval);
-
         console.error("Error details:", error.data || error);
         await client.chat.postMessage({
           channel: event.channel,
