@@ -25,7 +25,7 @@ app.post("/slack/events", async (req, res) => {
   // Immediately acknowledge the webhook
   res.sendStatus(200);
 
-  if (type === "url_verification") {
+  if (event.type === "url_verification") {
     res.send(req.body.challenge);
   } else if (type === "event_callback" && event.type === "app_mention") {
     try {
