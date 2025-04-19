@@ -20,14 +20,16 @@ const ENGINE_URL = process.env.ENGINE_URL;
 
 app.post("/slack/events", async (req, res) => {
   const { type, event } = req.body;
-  console.log("Received event:", JSON.stringify(req.body, null, 2));
+
+  if (event.type === "url_verification") {
+    res.status(200).send(req.body.challenge);
+    return;
+  }
 
   // Immediately acknowledge the webhook
   res.sendStatus(200);
 
-  if (event.type === "url_verification") {
-    res.send(req.body.challenge);
-  } else if (type === "event_callback" && event.type === "app_mention") {
+  if (type === "event_callback" && event.type === "app_mention") {
     try {
       // Get user info to retrieve the display name
       const userInfo = await client.users.info({
