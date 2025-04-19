@@ -6,6 +6,10 @@ const { GoogleAuth } = require("google-auth-library");
 
 dotenv.config();
 
+const config = {
+  maxMessagesLength: 5,
+};
+
 const auth = new GoogleAuth();
 
 const app = express();
@@ -48,12 +52,19 @@ app.post("/slack/events", async (req, res) => {
         data: requestBody,
       });
 
-      const reply = response.data.response.content;
-
-      const result = await client.chat.postMessage({
-        channel: event.channel,
-        text: reply,
-      });
+      const reply_messages = response.data.messages;
+      const limited_reply_messages = reply_messages.slice(
+        0,
+        config.maxMessagesLength
+      );
+      for (const message of limited_reply_messages) {
+        if (message) {
+          await client.chat.postMessage({
+            channel: event.channel,
+            text: message,
+          });
+        }
+      }
     } catch (error) {
       console.error("Error details:", error.data || error);
       await client.chat.postMessage({
