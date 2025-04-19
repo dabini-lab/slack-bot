@@ -52,12 +52,12 @@ app.post("/slack/events", async (req, res) => {
         data: requestBody,
       });
 
-      const reply_messages = response.data.messages;
-      const limited_reply_messages = reply_messages.slice(
+      const replyMessages = response.data.messages;
+      const limitedReplyMessages = replyMessages.slice(
         0,
         config.maxMessagesLength
       );
-      for (const message of limited_reply_messages) {
+      for (const message of limitedReplyMessages) {
         if (message) {
           await client.chat.postMessage({
             channel: event.channel,
