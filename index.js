@@ -48,24 +48,54 @@ app.post("/slack/events", async (req, res) => {
         speaker_name: speaker_name,
       };
 
-      const response = await authClient.request({
-        url: `${ENGINE_URL}/messages`,
-        method: "POST",
-        data: requestBody,
+      // Send initial typing indicator
+      await client.conversations.typing({
+        channel: event.channel,
       });
 
-      const replyMessages = response.data.messages;
-      const limitedReplyMessages = replyMessages.slice(
-        0,
-        config.maxMessagesLength
-      );
-      for (const message of limitedReplyMessages) {
-        if (message) {
-          await client.chat.postMessage({
+      // Set up interval to keep sending typing indicators
+      const typingInterval = setInterval(async () => {
+        try {
+          await client.conversations.typing({
             channel: event.channel,
-            text: message,
           });
+        } catch (error) {
+          console.error("Error sending typing indicator:", error);
         }
+      }, 3000); // Send typing indicator every 3 seconds
+
+      try {
+        const response = await authClient.request({
+          url: `${ENGINE_URL}/messages`,
+          method: "POST",
+          data: requestBody,
+        });
+
+        // Stop typing indicator
+        clearInterval(typingInterval);
+
+        const replyMessages = response.data.messages;
+        const limitedReplyMessages = replyMessages.slice(
+          0,
+          config.maxMessagesLength
+        );
+        for (const message of limitedReplyMessages) {
+          if (message) {
+            await client.chat.postMessage({
+              channel: event.channel,
+              text: message,
+            });
+          }
+        }
+      } catch (error) {
+        // Stop typing indicator
+        clearInterval(typingInterval);
+
+        console.error("Error details:", error.data || error);
+        await client.chat.postMessage({
+          channel: event.channel,
+          text: "Engine API 호출 중 문제가 발생했어.",
+        });
       }
     } catch (error) {
       console.error("Error details:", error.data || error);
