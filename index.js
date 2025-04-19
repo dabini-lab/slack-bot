@@ -21,7 +21,7 @@ const ENGINE_URL = process.env.ENGINE_URL;
 app.post("/slack/events", async (req, res) => {
   const { type, event } = req.body;
 
-  if (event.type === "url_verification") {
+  if (type === "url_verification") {
     res.status(200).send(req.body.challenge);
     return;
   }
